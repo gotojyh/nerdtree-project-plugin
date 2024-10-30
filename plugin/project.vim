@@ -120,17 +120,9 @@ function! s:Project.New(name, nerdtree, ...) abort
         let newObj._openDirs = newObj._extractOpenDirs(a:nerdtree.root)
     endif
 
-    if has_key(opts, 'openFile')
-        let newObj._openFile = opts['openFile']
-    else
-        let newObj._openFile = '/root/'
-    endif
-
     let newObj._hiddenDirs = has_key(opts, 'hiddenDirs') ? opts['hiddenDirs'] : []
 
     call newObj.rebuildHiddenRegex()
-
-
 
     return newObj
 endfunction
@@ -203,7 +195,7 @@ function! s:Project.Read() abort
 
     for projHash in projHashes
         let nerdtree = g:NERDTree.New(g:NERDTreePath.New(projHash['rootPath']), "tab")
-        let project = s:Project.New(projHash['name'], nerdtree, { 'openDirs': projHash['openDirs'], 'hiddenDirs': projHash['hiddenDirs'],'openFile':projHash['openFile'] })
+        let project = s:Project.New(projHash['name'], nerdtree, { 'openDirs': projHash['openDirs'], 'hiddenDirs': projHash['hiddenDirs'] })
         call add(s:Project.All(), project)
     endfor
 endfunction
@@ -235,7 +227,6 @@ function! s:Project.Write() abort
             \ 'openDirs': proj.getOpenDirs(),
             \ 'rootPath': proj.getRootPath().str(),
             \ 'hiddenDirs': proj.getHiddenDirs(),
-			\ 'openFile': expand('%:p'),
         \ }
 
         call add(projHashes, hash)
@@ -315,8 +306,6 @@ function! s:Project.open() abort
     let b:NERDTree.__currentProject = self
     call b:NERDTree.render()
 
-	wincmd p
-	exec 'edit ' self._openFile
 endfunction
 
 " FUNCTION: Project.rebuildHiddenRegex() {{{3
