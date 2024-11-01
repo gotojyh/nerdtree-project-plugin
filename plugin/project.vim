@@ -39,7 +39,8 @@ let g:loaded_nerdtree_project_plugin=1
 
 "Glue code - wiring up s:Project into nerdtree {{{1
 "============================================================
-command! -nargs=1 NERDTreeProjectSave call g:NERDTreeProject.Add(<q-args>, b:NERDTree)
+"command! -nargs=1 NERDTreeProjectSave call g:NERDTreeProject.Add(<q-args>, b:NERDTree)
+command! -nargs=1 NERDTreeProjectSave call g:NERDTreeProject.Add(<q-args>, s:GetNerdTree())
 command! -nargs=1 -complete=customlist,NERDTreeCompleteProjectNames NERDTreeProjectLoad call g:NERDTreeProject.Open(<q-args>)
 command! -nargs=1 -complete=customlist,NERDTreeCompleteProjectNames NERDTreeProjectRm call g:NERDTreeProject.Remove(<q-args>)
 "command! -nargs=0 -complete=customlist,NERDTreeCompleteProjectNames NERDTreeProjectLoadFromCWD call g:NERDTreeProject.LoadFromCWD()
@@ -61,24 +62,32 @@ augroup end
 let s:Project = {}
 let g:NERDTreeProject = s:Project
 
+function! s:GetNerdTree()
+	for buf in range(bufnr('$'))
+		let nerdtree=getbufvar(bufnr(buf+1),'NERDTree')
+		if !empty(nerdtree)
+			return nerdtree
+		endif
+	endfor
+endfunction
+
 "Class Methods {{{2
 "============================================================
 " FUNCTION: Project.Add(name, nerdtree) {{{3
 function! s:Project.Add(name, nerdtree) abort
     for i in s:Project.All()
         if i.getName() ==# a:name
-			call s:Project.Remove(a:name)
-            "let l:ret=i.update(a:nerdtree)
+			"call s:Project.Remove(a:name)
+            let l:ret=i.update(a:nerdtree)
     		"call s:Project.Write()
-			"return l:ret
-			break
+			return l:ret
         endif
     endfor
 
     let newProj = s:Project.New(a:name, a:nerdtree)
     call add(s:Project.All(), newProj)
     call s:Project.Write()
-    call newProj.open()
+    "call newProj.open()
 endfunction
 
 " FUNCTION: Project.All() {{{3
@@ -111,6 +120,7 @@ function! s:Project.New(name, nerdtree, ...) abort
 
     let newObj = copy(self)
     let newObj._name = a:name
+
     let newObj._rootPath = a:nerdtree.root.path
 
     let opts = a:0 ? a:1 : {}
